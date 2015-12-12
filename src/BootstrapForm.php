@@ -59,6 +59,13 @@ class BootstrapForm
     protected $rightColumnClass;
 
     /**
+     * The key to be used for the view error bag.
+     *
+     * @var string
+     */
+    protected $errorBag = 'default';
+
+    /**
      * Construct the class.
      *
      * @param  \Collective\Html\HtmlBuilder             $html
@@ -103,10 +110,17 @@ class BootstrapForm
             $this->setRightColumnClass($options['right_column_class']);
         }
 
+        // Set the name of the error bag to pull from the session.  The default is "default".
+        // This allows multiple forms to be on the same page without error messages colliding
+        if (array_key_exists('errorBag', $options)) {
+            $this->errorBag = $options['errorBag'];
+        }
+
         array_forget($options, [
-            'left_column_class', 
-            'left_column_offset_class', 
-            'right_column_class'
+            'left_column_class',
+            'left_column_offset_class',
+            'right_column_class',
+            'errorBag'
         ]);
 
         if (array_key_exists('model', $options)) {
@@ -810,11 +824,15 @@ class BootstrapForm
      * Get the MessageBag of errors that is populated by the
      * validator.
      *
-     * @return \Illuminate\Support\MessageBag
+     * @return \Illuminate\Support\ViewErrorBag
      */
     protected function getErrors()
     {
-        return $this->form->getSessionStore()->get('errors');
+        $errors = $this->form->getSessionStore()->get('errors');
+        if ($errors) {
+            return $errors->getBag($this->errorBag);
+        }
+        return $errors;
     }
 
     /**
